@@ -37,3 +37,15 @@ View(cbind(id, week, cond, base, y, y.nmar))
 
 require(survival)
 require(survsim)
+
+dist.ev <- "weibull"
+anc.ev <- 1
+beta0.ev <- 5.268
+dist.cens <- "weibull"
+anc.cens <- 1
+beta0.cens <- 5.368
+x <- list(c("bern", 0.3), c("bern", 0.4))
+beta <- list(-0.4, -0.25)
+
+simple.dat <- simple.surv.sim(300, 365, dist.ev, anc.ev, beta0.ev,dist.cens, anc.cens, beta0.cens, , beta, x)
+summary(simple.dat)
