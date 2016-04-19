@@ -47,5 +47,14 @@ beta0.cens <- 5.368
 x <- list(c("bern", 0.3), c("bern", 0.4))
 beta <- list(-0.4, -0.25)
 
-simple.dat <- simple.surv.sim(300, 365, dist.ev, anc.ev, beta0.ev,dist.cens, anc.cens, beta0.cens, , beta, x)
-summary(simple.dat)
+store.coef=matrix(data=NA,nrow=100,ncol=2)
+for (i in 1:100) {
+  simple.dat <- simple.surv.sim(300, 365, dist.ev, anc.ev, beta0.ev,dist.cens, anc.cens, beta0.cens, , beta, x)
+  store.coef[i,1]=coxph(Surv(start,stop,status)~x+x.1, data=simple.dat)$coef[1]
+  store.coef[i,2]=coxph(Surv(start,stop,status)~x+x.1, data=simple.dat)$coef[2]
+}
+
+plot(1:100,store.coef[,1])
+plot(1:100,store.coef[,2])
+
+
