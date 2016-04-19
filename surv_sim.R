@@ -36,7 +36,9 @@ y.nmar = ifelse(y>nmar, NA, y)  # doesn't show up when heavier
 View(cbind(id, week, cond, base, y, y.nmar))
 
 require(survival)
+install.packages("survsim")
 require(survsim)
+require(ggplot2)
 
 dist.ev <- "weibull"
 anc.ev <- 1
@@ -47,14 +49,48 @@ beta0.cens <- 5.368
 x <- list(c("bern", 0.3), c("bern", 0.4))
 beta <- list(-0.4, -0.25)
 
+##full data
 store.coef=matrix(data=NA,nrow=100,ncol=2)
 for (i in 1:100) {
   simple.dat <- simple.surv.sim(300, 365, dist.ev, anc.ev, beta0.ev,dist.cens, anc.cens, beta0.cens, , beta, x)
-  store.coef[i,1]=coxph(Surv(start,stop,status)~x+x.1, data=simple.dat)$coef[1]
-  store.coef[i,2]=coxph(Surv(start,stop,status)~x+x.1, data=simple.dat)$coef[2]
+  full.model=coxph(Surv(start,stop,status)~x+x.1, data=simple.dat)
+  store.coef[i,1]=full.model$coef[1]
+  store.coef[i,2]=full.model$coef[2]
 }
 
-plot(1:100,store.coef[,1])
-plot(1:100,store.coef[,2])
+plot.model.1=as.data.frame(store.coef[,1])
+plot.model.1$coef=1
+colnames(plot.model.1)[colnames(plot.model.1)=="store.coef[, 1]"] <- "coef.val"
+plot.model.2=as.data.frame(store.coef[,2])
+plot.model.2$coef=2
+colnames(plot.model.2)[colnames(plot.model.2)=="store.coef[, 2]"] <- "coef.val"
+plot.model=rbind(plot.model.1,plot.model.2)
+aggregate(plot.model$coef.val,by=list(plot.model$coef),FUN=mean, na.rm=TRUE)
+aggregate(plot.model$coef.val,by=list(plot.model$coef),FUN=sd, na.rm=TRUE)
+
+p <- ggplot(plot.model, aes(factor(coef), coef.val))
+p + geom_boxplot()
 
 
+##MCAR
+# MCAR
+prop.m = .1  # 10% missingness
+store.coef=matrix(data=NA,nrow=100,ncol=2)
+for (i in 1:100) {
+  simple.dat <- simple.surv.sim(300, 365, dist.ev, anc.ev, beta0.ev,dist.cens, anc.cens, beta0.cens, , beta, x)
+  mcar   = runif(300, min=0, max=1)
+  simple.dat$status = ifelse(mcar<prop.m, NA, simple.dat$status) 
+  full.model=coxph(Surv(start,stop,status)~x+x.1, data=simple.dat)
+  store.coef[i,1]=full.model$coef[1]
+  store.coef[i,2]=full.model$coef[2]
+}
+
+plot.model.1=as.data.frame(store.coef[,1])
+plot.model.1$coef=1
+colnames(plot.model.1)[colnames(plot.model.1)=="store.coef[, 1]"] <- "coef.val"
+plot.model.2=as.data.frame(store.coef[,2])
+plot.model.2$coef=2
+colnames(plot.model.2)[colnames(plot.model.2)=="store.coef[, 2]"] <- "coef.val"
+plot.model=rbind(plot.model.1,plot.model.2)
+aggregate(plot.model$coef.val,by=list(plot.model$coef),FUN=mean, na.rm=TRUE)
+aggregate(plot.model$coef.val,by=list(plot.model$coef),FUN=sd, na.rm=TRUE)
