@@ -34,3 +34,9 @@ sort.y = sort(y, decreasing=TRUE)
 nmar   = sort.y[ceiling(prop.m*length(y))]
 y.nmar = ifelse(y>nmar, NA, y)  # doesn't show up when heavier
 View(cbind(id, week, cond, base, y, y.nmar))
+
+require(survival)
+data.use=lung
+summary(data.use)
+##baseline model
+base.model=coxph(Surv(time,status)~age+as.factor(sex), data=data.use)
